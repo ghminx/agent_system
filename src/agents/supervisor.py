@@ -14,7 +14,7 @@ from langgraph.graph import START, END, StateGraph
 from langgraph.types import Command
 
 from src.config import Configuration
-from src.tools.think_tool import think_tool
+from src.agents.think_tool import think_tool
 from src.prompts import (
     supervisor_system_prompt
     )
@@ -34,8 +34,8 @@ from src.utils import (
 # ========================================
 class FileSearch(BaseModel):
     """파일 검색 작업 위임"""
-    query: str = Field(description="검색할 파일 키워드")
-    path: str = Field(description="검색 시작 경로", default=".")
+    # query: str = Field(description="검색할 파일 키워드")
+    # path: str = Field(description="검색 시작 경로", default=".")
     
 class EcountSchedule(BaseModel):
     """Ecount 일정 조회 작업 위임"""
@@ -195,9 +195,18 @@ async def supervisor_tools(state: SupervisorState, config: RunnableConfig) -> Co
         if tool_call["name"] == "FileSearch"
     ]
     
+    ddd = {
+                "messages": state["messages"] + all_tool_messages  # 전체 컨텍스트
+            }
+    
+    print(ddd)
+    
     if file_search_calls:
-        print(file_search_calls)
-        return Command(goto=END)
+        return Command(
+            goto="file_search_agent",
+            update={
+                "messages": state["messages"] + all_tool_messages  # 전체 컨텍스트
+            })
     
     update_response["supervisor_messages"] = all_tool_messages
     return Command(
@@ -219,7 +228,7 @@ agent = supervisor_builder.compile()
 
 
 async def run():
-    response = await agent.ainvoke({"messages": '전략기획팀 폴더에서 디딤돌 사업계획서 파일 찾아줘'}, config=RunnableConfig())
+    response = await agent.ainvoke({"messages": '전략기획팀 폴더에서 디딤돌 사업에 있는 파일 어떤거 있는지 확인해줘'}, config=RunnableConfig())
     
     return response
 
@@ -227,7 +236,7 @@ if __name__ == "__main__":
     response = asyncio.run(run())
     print(response)
     
-# # if __name__ == "__main__":
-# #     response = asyncio.run(supervisor({"messages": '전략기획팀 폴더에서 디딤돌 사업계획서 파일 찾아줘'}, config=RunnableConfig()))
+# # # if __name__ == "__main__":
+# # #     response = asyncio.run(supervisor({"messages": '전략기획팀 폴더에서 디딤돌 사업계획서 파일 찾아줘'}, config=RunnableConfig()))
 
-print(response['agent_results'])
+# print(response['agent_results'])

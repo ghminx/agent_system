@@ -17,6 +17,12 @@ def think_tool(reflection: str) -> str:
     - Before responding: Is additional agent execution needed?
     - When planning complex workflows: How should multiple agents be orchestrated?
 
+    Do NOT extract specific parameters like:
+    - File paths, folder names, or file extensions
+    - Dates or time ranges
+    - Email addresses or recipients
+    - Any other detailed parameters
+
     Reflection should address:
     1. Request analysis - What is the core intent of the user's request?
     2. Agent selection - Which agent(s) should handle this task?
