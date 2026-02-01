@@ -270,5 +270,5 @@ async def test_file_search():
 if __name__ == "__main__":
     response = asyncio.run(test_file_search())
 
-    print("\n=== File Search Agent Response ===")
 
+print(response['search_results'])

@@ -28,7 +28,7 @@ class Configuration:
     
     # Multi Agent 설정 
     number_of_queries: int = 2
-    max_workflow_iterations: int = 2
+    max_workflow_iterations: int = 1
     supervisor_model: str = "openai:gpt-5-mini"
     sub_agent_model: str = "openai:gpt-5-mini"
     

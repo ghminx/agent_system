@@ -115,8 +115,11 @@ async def supervisor(state: SupervisorState, config: RunnableConfig):
     )
     messages = state.get("messages", [])
     supervisor_messages = state.get("supervisor_messages", [])
-    response = await supervisor_model.ainvoke([SystemMessage(content=supervisor_prompt),
-                                               messages[-1]] + supervisor_messages)
+    
+    # all_messages = [SystemMessage(content=supervisor_prompt)] + messages + supervisor_messages
+    
+    response = await supervisor_model.ainvoke([SystemMessage(content=supervisor_prompt)] +
+                                               messages + supervisor_messages)
     
     return Command(goto="supervisor_tools", update={"supervisor_messages": [response]})
 
@@ -195,11 +198,6 @@ async def supervisor_tools(state: SupervisorState, config: RunnableConfig) -> Co
         if tool_call["name"] == "FileSearch"
     ]
     
-    ddd = {
-                "messages": state["messages"] + all_tool_messages  # 전체 컨텍스트
-            }
-    
-    print(ddd)
     
     if file_search_calls:
         return Command(
@@ -233,10 +231,11 @@ async def run():
     return response
 
 if __name__ == "__main__":
+    import time 
+    
+    start = time.time()
     response = asyncio.run(run())
+    end = time.time()
+    print(f"Execution Time: {end - start} seconds")
     print(response)
     
-# # # if __name__ == "__main__":
-# # #     response = asyncio.run(supervisor({"messages": '전략기획팀 폴더에서 디딤돌 사업계획서 파일 찾아줘'}, config=RunnableConfig()))
-
-# print(response['agent_results'])

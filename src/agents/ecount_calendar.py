@@ -59,7 +59,7 @@ with sync_playwright() as playwright:
 
     page.goto("https://login.ecount.com/Login/")'''
 
-    day = run(playwright, date="15")
+    day = run(playwright, date="30")
     
     
     
