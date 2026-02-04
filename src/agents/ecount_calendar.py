@@ -1,6 +1,10 @@
+import os
 import re
 from playwright.sync_api import Playwright, sync_playwright, expect
+from playwright.async_api import async_playwright
+
 from rich import print
+from dotenv import load_dotenv
 
 from langchain.tools import tool 
 from langchain.chat_models import init_chat_model
@@ -9,10 +13,14 @@ from langchain.messages import SystemMessage, HumanMessage
 
 from src.utils import get_today
 
+load_dotenv()
+
+
 
 
 @tool
-def ecount_calendar_tool(date: str) -> list:
+async def ecount_calendar_tool(date: str) -> list:
+    
     """Ecount에 접속하여 특정 날짜에 등록된 일정을 크롤링하여 리스트로 반환하는 Tool 
 
     Args:
@@ -23,48 +31,45 @@ def ecount_calendar_tool(date: str) -> list:
     """
     
     year, month, day = date.split('-')
-    day = day[1:]  # 0 제거
-    with sync_playwright() as playwright:
+    day = day.lstrip("0")
 
-        browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context()
-        page = context.new_page()
-        page.goto("https://login.ecount.com/Login/")
+    # with sync_playwright() as playwright:
+    async with async_playwright() as playwright:
 
-
-        cc = '651820'
-        id = 'GHMIN'
-        pw = 'ghmin12345'
-
-
-        page.get_by_role("textbox", name="회사코드").fill(cc)
-        page.get_by_role("textbox", name="아이디").fill(id)
-        page.get_by_role("textbox", name="비밀번호").fill(pw)
-        page.get_by_role("button", name="로그인").click()
-
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+        
+        await page.goto("https://login.ecount.com/Login/")
+        await page.get_by_role("textbox", name="회사코드").fill(os.getenv('ECOUNT_CODE'))
+        await page.get_by_role("textbox", name="아이디").fill(os.getenv('ECOUNT_ID'))
+        await page.get_by_role("textbox", name="비밀번호").fill(os.getenv('ECOUNT_PW'))
+        await page.get_by_role("button", name="로그인").click()
 
         # 네트워크 유휴 상태 대기
-        page.locator('table.caledar').wait_for(state='visible', timeout=10000)
+        await page.locator('table.caledar').wait_for(state='visible', timeout=10000)
         
         # 수집 할 날짜 선택
-        day_cell = page.locator('td[data-role="calendar.addScheduleClick"]', has_text=day)
+        # day_cell = page.locator('td[data-role="calendar.addScheduleClick"]', has_text=day)
+        day_cell = page.locator(f'xpath=//span[contains(@class,"day") and normalize-space()="{day}"]/ancestor::td[1]')
 
         day_lst = day_cell.locator('a[data-role="calendar.scheduleClick"]')
 
-
         event = []
-        for i in range(day_lst.count()):
-            day_lst.nth(i).click()
-            page.locator('.table-form').wait_for(state='visible')
-            
-            content = page.locator('.table-form').inner_text()
-            
+        for i in range(await day_lst.count()):
+            await day_lst.nth(i).click()
+            await page.locator('.table-form').wait_for(state='visible')
+
+            content = await page.locator('.table-form').inner_text()
             event.append(content)
             
-            page.locator('.ui-dialog-titlebar-close').click()
+            await page.locator('.ui-dialog-titlebar-close').click()
             
-        context.close()
-        browser.close()
+        if not event:
+            event.append("등록된 일정이 없습니다.")    
+            
+        await context.close()
+        await browser.close()
         
         return event
         
@@ -107,16 +112,13 @@ agent = create_agent(
 )
 
 
+async def run(day):
 
+    response = await agent.ainvoke({"messages": [{"role": "user", "content": f"2월 {day}일 등록된 일정 알려줘"}]})
 
-response = agent.invoke({"messages": [{"role": "user", "content": "2월 2일에 등록된 일정 알려줘"}]})
+    print(response['messages'][-1].content)
 
-
-print(response)
-
-
-
-# tools=[ecount_calendar_tool]
-
-# tools[0].invoke({"date":3})   
-
+if __name__ == "__main__":
+    import asyncio
+    
+    asyncio.run(run(6))
