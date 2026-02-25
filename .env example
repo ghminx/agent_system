@@ -1,0 +1,14 @@
+# mail
+app_password = 
+
+# Ecount 
+ECOUNT_CODE = 
+ECOUNT_ID = 
+ECOUNT_PW = 
+
+
+# LangSmith
+LANGSMITH_API_KEY=
+LANGSMITH_TRACING=true
+
+

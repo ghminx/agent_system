@@ -119,4 +119,4 @@ async def run(day):
 if __name__ == "__main__":
     import asyncio
     
-    asyncio.run(run(3))
+    asyncio.run(run(24))

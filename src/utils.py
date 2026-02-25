@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from email.utils import formatdate, make_msgid
+from langchain.tools import tool 
 
 
 def get_today() -> str:
@@ -14,15 +15,29 @@ def get_today() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
-def send_smtp(state: dict) -> dict:
-    """SMTP를 사용하여 이메일을 보내고, 보낸편지함에 기록하는 함수"""
-    
-    from_mail = state["from_mail"]
-    to_mail = state["to_mail"]
-    app_password = state["app_password"]
-    title = state["title"]
-    context = state["context"]
-    files = state["files"]
+
+@tool("send_mail", description="SMTP를 사용하여 이메일을 보내는 도구. 메일 발송에 필요한 정보를 입력받아 이메일을 발송.")
+def send_smtp(from_mail,
+              to_mail,
+              app_password,
+              title,
+              context,
+              files,
+              send_name,
+              **kwargs) -> dict:
+    """SMTP를 사용하여 이메일을 보내고, 보낸편지함에 기록하는 함수
+
+    Args:
+        from_mail (str): 메일 발신자 주소
+        to_mail (str): 메일 수신자 주소
+        app_password (str): 발신자 메일 계정의 앱 비밀번호
+        title (str): 메일 제목
+        context (str): 메일 본문 내용
+        files (str): 파일 경로
+
+    Returns:
+        dict: _description_
+    """
 
     # 제목 및 본문
     smtp = MIMEMultipart()
@@ -30,8 +45,29 @@ def send_smtp(state: dict) -> dict:
     smtp["From"] = from_mail # 발신자
     smtp["To"] = to_mail     # 수신자
     smtp["Message-ID"] = make_msgid()
-    smtp.attach(MIMEText(context, _charset="utf-8")) # 본문 내용
+    # smtp.attach(MIMEText(context, _charset="utf-8")) # 본문 내용
 
+    html_context = context.replace("\n", "<br>")
+    
+    # 서명 HTML 생성
+    content = f"""
+    <html>
+    <body>
+        <div>
+        {html_context}
+        </div>
+
+    <div style="background: url('https://st-research.co.kr/images/member/[STR]_이메일서명_(중기부)_{send_name}.png') no-repeat;
+                width:700px;
+                height:340px;
+                margin-top:50px;">
+    </body>
+    </html>
+    """
+
+    # 본문을 HTML로 첨부
+    smtp.attach(MIMEText(content, "html", _charset="utf-8"))
+    
     # 첨부파일
     if files:
         file_path = Path(files)
@@ -55,5 +91,4 @@ def send_smtp(state: dict) -> dict:
             imaplib.Time2Internaldate(time.time()),
             raw_bytes,
         )
-        
         

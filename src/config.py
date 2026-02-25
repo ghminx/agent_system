@@ -31,7 +31,7 @@ class Configuration:
     number_of_queries: int = 2
     max_workflow_iterations: int = 1
     # supervisor_model: str = "openai:gpt-5-mini"
-    supervisor_model: str = "claude-sonnet-4-6"
+    supervisor_model: str = "claude-sonnet-4-5"
     sub_agent_model: str = "openai:gpt-5-mini"
     # sub_agent_model: str = "claude-sonnet-4-6"
     

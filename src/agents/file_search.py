@@ -151,7 +151,7 @@ class FileSearchState(MessagesState):
         messages: 메시지 (MessagesState에서 상속)
         search_results: 검색 결과 문자열
     """
-    search_results: str
+    # search_results: str
 
 
 
@@ -192,7 +192,7 @@ async def file_search_agent(state: FileSearchState, config: RunnableConfig):
     # 도구 호출이 있으면 실행
     if response.tool_calls:
         tool_messages = []
-        search_results = ''
+        # search_results = ''
         
         for tool_call in response.tool_calls:
             tool_name = tool_call["name"]
@@ -203,7 +203,7 @@ async def file_search_agent(state: FileSearchState, config: RunnableConfig):
             except Exception as e:
                 result = f"파일 검색 도구 실행 중 오류 발생: {str(e)}"
             
-            search_results = result
+            # search_results = result
             tool_messages.append(ToolMessage(
                 content=result,
                 name=tool_name,
@@ -214,7 +214,7 @@ async def file_search_agent(state: FileSearchState, config: RunnableConfig):
             goto=END,
             update={
                 "messages": [response] + tool_messages,
-                "search_results": search_results
+                # "search_results": search_results
             }
         )
     
